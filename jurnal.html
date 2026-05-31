@@ -1,0 +1,2105 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deny — Jurnal Harian</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #0a0a0f;
+    --bg-card: #111118;
+    --bg-elevated: #18181f;
+    --bg-glass: rgba(24,24,31,0.85);
+    --border: rgba(255,255,255,0.07);
+    --border-soft: rgba(255,255,255,0.04);
+    --gold: #c9a84c;
+    --gold-light: #e8c97e;
+    --gold-dim: rgba(201,168,76,0.15);
+    --gold-glow: rgba(201,168,76,0.08);
+    --text-primary: #f0ece4;
+    --text-secondary: #8a8578;
+    --text-muted: #4a4740;
+    --accent-teal: #5bb8a8;
+    --accent-rose: #c4687a;
+    --accent-violet: #8b7ec8;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow: 0 8px 32px rgba(0,0,0,0.5);
+    --shadow-gold: 0 0 40px rgba(201,168,76,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── NOISE TEXTURE ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.6;
+  }
+
+  /* ─── SCREENS ─── */
+  .screen { display: none; min-height: 100vh; position: relative; z-index: 1; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ─── AUTH SCREEN ─── */
+  #auth-screen {
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.06) 0%, transparent 60%);
+  }
+
+  .auth-container {
+    width: 100%;
+    max-width: 400px;
+    animation: fadeUp 0.6s ease;
+  }
+
+  .auth-logo {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .auth-logo-mark {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    border-radius: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin-bottom: 16px;
+    box-shadow: 0 0 30px rgba(201,168,76,0.3);
+  }
+
+  .auth-logo h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    color: var(--text-primary);
+    letter-spacing: 2px;
+  }
+
+  .auth-logo p {
+    color: var(--text-secondary);
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .auth-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: var(--shadow);
+  }
+
+  .auth-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-deep);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 28px;
+  }
+
+  .auth-tab {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.25s;
+  }
+
+  .auth-tab.active {
+    background: var(--bg-elevated);
+    color: var(--gold);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  .form-group { margin-bottom: 18px; }
+
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+  }
+
+  .form-input {
+    width: 100%;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .form-input:focus {
+    border-color: rgba(201,168,76,0.4);
+    box-shadow: 0 0 0 3px rgba(201,168,76,0.08);
+  }
+
+  .form-input::placeholder { color: var(--text-muted); }
+
+  .btn-primary {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    border: none;
+    border-radius: var(--radius-sm);
+    color: #1a1408;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s;
+    letter-spacing: 0.5px;
+    margin-top: 8px;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(201,168,76,0.35);
+  }
+
+  .btn-primary:active { transform: translateY(0); }
+
+  .auth-error {
+    background: rgba(196,104,122,0.1);
+    border: 1px solid rgba(196,104,122,0.2);
+    color: var(--accent-rose);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-top: 12px;
+    display: none;
+  }
+
+  /* ─── MAIN APP ─── */
+  #app-screen { padding-bottom: 80px; }
+
+  /* ─── TOP BAR ─── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 20px 16px;
+    position: sticky;
+    top: 0;
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border-soft);
+    z-index: 50;
+  }
+
+  .topbar-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: var(--gold);
+    letter-spacing: 1px;
+  }
+
+  .topbar-date {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  .topbar-date strong {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-primary);
+    font-size: 13px;
+  }
+
+  .topbar-actions { display: flex; gap: 8px; }
+
+  .icon-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.2s;
+  }
+
+  .icon-btn:hover { color: var(--gold); border-color: rgba(201,168,76,0.3); }
+
+  /* ─── PAGE CONTENT ─── */
+  .page { display: none; padding: 20px; animation: fadeUp 0.4s ease; }
+  .page.active { display: block; }
+
+  /* ─── HOME PAGE ─── */
+  .greeting-section { margin-bottom: 24px; }
+
+  .greeting-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .greeting-text span { color: var(--gold); }
+
+  .greeting-sub { color: var(--text-secondary); font-size: 13px; }
+
+  .quote-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gold);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .quote-card::before {
+    content: '"';
+    position: absolute;
+    top: -10px;
+    right: 16px;
+    font-family: 'Playfair Display', serif;
+    font-size: 80px;
+    color: var(--gold-dim);
+    line-height: 1;
+  }
+
+  .quote-text {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 15px;
+    color: var(--text-primary);
+    line-height: 1.7;
+    margin-bottom: 8px;
+  }
+
+  .quote-author { font-size: 12px; color: var(--gold); letter-spacing: 1px; }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ─── STATS ROW ─── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 12px;
+    text-align: center;
+    transition: all 0.2s;
+  }
+
+  .stat-card:hover { border-color: rgba(201,168,76,0.2); }
+
+  .stat-icon { font-size: 22px; margin-bottom: 8px; }
+  .stat-value { font-size: 22px; font-weight: 600; color: var(--gold); font-family: 'DM Mono', monospace; }
+  .stat-label { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
+
+  /* ─── WORKOUT SCHEDULE BAR ─── */
+  .schedule-container {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 4px 4px 12px 4px;
+    margin-bottom: 24px;
+    scrollbar-width: none;
+  }
+  .schedule-container::-webkit-scrollbar { display: none; }
+  .schedule-card {
+    min-width: 150px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .schedule-card.today {
+    border-color: var(--gold);
+    background: linear-gradient(180deg, var(--gold-glow), rgba(201,168,76,0.02));
+    box-shadow: var(--shadow-gold);
+  }
+  .schedule-card.today::after {
+    content: 'HARI INI';
+    position: absolute;
+    top: -8px;
+    right: 10px;
+    background: var(--gold);
+    color: #1a1408;
+    font-size: 8px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+  }
+  .schedule-day-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .schedule-card.today .schedule-day-title { color: var(--gold-light); }
+  .schedule-time-block {
+    font-size: 11.5px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 4px;
+  }
+  .schedule-time-block:last-child { margin-bottom: 0; }
+  .schedule-time-block strong { color: var(--text-primary); font-weight: 500; }
+
+  /* ─── ENTRY CARD ─── */
+  .entry-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .entry-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--gold);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .entry-card:hover { border-color: rgba(201,168,76,0.2); transform: translateX(2px); }
+  .entry-card:hover::before { opacity: 1; }
+
+  .entry-card.exercise-type::before { background: var(--accent-teal); opacity: 1; }
+
+  .entry-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .entry-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .entry-badge {
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .badge-daily { background: var(--gold-dim); color: var(--gold); }
+  .badge-exercise { background: rgba(91,184,168,0.12); color: var(--accent-teal); }
+  .badge-mood { background: rgba(139,126,200,0.12); color: var(--accent-violet); }
+
+  .entry-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    line-height: 1.4;
+  }
+
+  .entry-preview {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .entry-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-soft);
+  }
+
+  .mood-emoji { font-size: 18px; }
+
+  .entry-actions { display: flex; gap: 6px; }
+
+  .action-btn-sm {
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .action-btn-sm:hover { border-color: rgba(196,104,122,0.4); color: var(--accent-rose); }
+  .action-btn-sm.edit:hover { border-color: rgba(201,168,76,0.4); color: var(--gold); }
+
+  /* ─── FAB ─── */
+  .fab {
+    position: fixed;
+    bottom: 100px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    border: none;
+    color: #1a1408;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(201,168,76,0.4);
+    transition: all 0.25s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 40;
+  }
+
+  .fab:hover { transform: scale(1.08) rotate(5deg); }
+  .fab:active { transform: scale(0.96); }
+
+  /* ─── MODAL ─── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  .modal-overlay.open {
+    display: flex;
+    animation: overlayFade 0.25s ease;
+  }
+
+  .modal {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 24px 24px 0 0;
+    padding: 28px 24px 40px;
+    width: 100%;
+    max-width: 600px;
+    max-height: 92vh;
+    overflow-y: auto;
+    animation: slideUp 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  .modal-handle {
+    width: 40px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 24px;
+  }
+
+  .modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .modal-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .modal-tab {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .modal-tab.active {
+    background: var(--gold-dim);
+    border-color: rgba(201,168,76,0.3);
+    color: var(--gold);
+  }
+
+  .textarea-field {
+    width: 100%;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.7;
+    outline: none;
+    resize: none;
+    transition: border-color 0.2s;
+    min-height: 120px;
+  }
+
+  .textarea-field:focus {
+    border-color: rgba(201,168,76,0.4);
+    box-shadow: 0 0 0 3px rgba(201,168,76,0.08);
+  }
+
+  .mood-selector {
+    display: flex;
+    gap: 10px;
+    margin: 16px 0;
+    flex-wrap: wrap;
+  }
+
+  .mood-btn {
+    padding: 8px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    cursor: pointer;
+    font-size: 20px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .mood-btn span { font-size: 12px; color: var(--text-secondary); font-family: 'DM Sans', sans-serif; }
+  .mood-btn.selected { background: var(--gold-dim); border-color: rgba(201,168,76,0.4); }
+  .mood-btn:hover { transform: scale(1.05); }
+
+  /* ─── EXERCISE FORM ─── */
+  .exercise-form { display: none; }
+  .exercise-form.active { display: block; }
+
+  .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .select-field {
+    width: 100%;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .select-field:focus { border-color: rgba(201,168,76,0.4); }
+
+  /* ─── BOTTOM NAV ─── */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg-glass);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-top: 1px solid var(--border);
+    display: flex;
+    z-index: 50;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .nav-item {
+    flex: 1;
+    padding: 12px 4px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    transition: all 0.25s;
+    position: relative;
+  }
+
+  .nav-item.active { color: var(--gold); }
+
+  .nav-item.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 2px;
+    background: var(--gold);
+    border-radius: 0 0 2px 2px;
+  }
+
+  .nav-icon { font-size: 20px; transition: transform 0.2s; }
+  .nav-item:hover .nav-icon { transform: translateY(-2px); }
+  .nav-item.active .nav-icon { filter: drop-shadow(0 0 6px rgba(201,168,76,0.5)); }
+  .nav-label { font-size: 10px; font-weight: 500; letter-spacing: 0.5px; }
+
+  /* ─── CALENDAR PAGE ─── */
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin-bottom: 24px;
+  }
+
+  .cal-header {
+    text-align: center;
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 600;
+    letter-spacing: 1px;
+    padding: 6px 0;
+  }
+
+  .cal-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    font-size: 13px;
+    cursor: pointer;
+    background: var(--bg-card);
+    border: 1px solid var(--border-soft);
+    transition: all 0.2s;
+    position: relative;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .cal-day:hover { border-color: rgba(201,168,76,0.3); color: var(--gold); }
+  .cal-day.today { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
+  .cal-day.has-entry::after {
+    content: '';
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--gold);
+    position: absolute;
+    bottom: 4px;
+  }
+
+  .cal-day.has-exercise::after { background: var(--accent-teal); }
+  .cal-day.empty { background: transparent; border-color: transparent; cursor: default; }
+
+  .cal-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .cal-nav-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s;
+  }
+
+  .cal-nav-btn:hover { color: var(--gold); border-color: rgba(201,168,76,0.3); }
+
+  .cal-month-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--text-primary);
+  }
+
+  /* ─── STATS PAGE ─── */
+  .progress-bar-wrap { margin-bottom: 16px; }
+
+  .progress-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+
+  .progress-bar-label span:last-child { color: var(--gold); font-weight: 600; }
+
+  .progress-bar-track {
+    height: 6px;
+    background: var(--bg-elevated);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+    border-radius: 3px;
+    transition: width 1s ease;
+  }
+
+  .progress-bar-fill.teal { background: linear-gradient(90deg, var(--accent-teal), #7dd8c8); }
+  .progress-bar-fill.violet { background: linear-gradient(90deg, var(--accent-violet), #a99fda); }
+
+  .exercise-summary-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .exercise-icon-big {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: rgba(91,184,168,0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  .exercise-info { flex: 1; }
+  .exercise-name { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+  .exercise-detail { font-size: 12px; color: var(--text-secondary); }
+
+  /* ─── SPREADSHEET MODAL ─── */
+  .spreadsheet-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 16px;
+  }
+
+  .spreadsheet-table th {
+    background: var(--bg-elevated);
+    color: var(--gold);
+    padding: 8px 10px;
+    text-align: left;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .spreadsheet-table td {
+    padding: 10px;
+    border-bottom: 1px solid var(--border-soft);
+    color: var(--text-secondary);
+    vertical-align: top;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .spreadsheet-table tr:hover td { background: var(--bg-elevated); }
+
+  .btn-export {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: rgba(91,184,168,0.12);
+    border: 1px solid rgba(91,184,168,0.25);
+    border-radius: var(--radius-sm);
+    color: var(--accent-teal);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    margin-right: 10px;
+    margin-bottom: 10px;
+  }
+
+  .btn-export:hover { background: rgba(91,184,168,0.2); transform: translateY(-1px); }
+
+  /* ─── PROFILE PAGE ─── */
+  .profile-header {
+    text-align: center;
+    padding: 24px 0;
+    margin-bottom: 24px;
+  }
+
+  .avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, var(--gold-dim), rgba(201,168,76,0.2));
+    border: 2px solid rgba(201,168,76,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    margin: 0 auto 16px;
+  }
+
+  .profile-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    margin-bottom: 4px;
+  }
+
+  .profile-email { font-size: 13px; color: var(--text-secondary); }
+
+  .settings-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border-soft);
+    cursor: pointer;
+  }
+
+  .settings-item:last-child { border-bottom: none; }
+
+  .settings-left { display: flex; align-items: center; gap: 14px; }
+  .settings-icon { font-size: 20px; width: 24px; text-align: center; }
+  .settings-label { font-size: 14px; }
+  .settings-arrow { color: var(--text-muted); font-size: 12px; }
+
+  .streak-badge {
+    background: linear-gradient(135deg, var(--gold-dim), rgba(201,168,76,0.2));
+    border: 1px solid rgba(201,168,76,0.25);
+    border-radius: 14px;
+    padding: 16px;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .streak-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 48px;
+    color: var(--gold);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .streak-label { font-size: 12px; color: var(--text-secondary); letter-spacing: 2px; text-transform: uppercase; }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  @keyframes overlayFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* ─── EMPTY STATE ─── */
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-muted);
+  }
+
+  .empty-state-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+  .empty-state h3 { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--text-secondary); margin-bottom: 8px; }
+  .empty-state p { font-size: 13px; line-height: 1.6; }
+
+  /* ─── TOAST ─── */
+  .toast {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-size: 13px;
+    color: var(--text-primary);
+    z-index: 200;
+    opacity: 0;
+    transition: all 0.3s;
+    white-space: nowrap;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0; }
+  .tag {
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+  .tag.selected { border-color: rgba(201,168,76,0.4); background: var(--gold-dim); color: var(--gold); }
+
+  .btn-secondary {
+    padding: 12px 20px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-right: 8px;
+  }
+  .btn-secondary:hover { border-color: rgba(255,255,255,0.15); color: var(--text-primary); }
+
+  .form-row-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+    margin-top: 16px;
+    display: block;
+  }
+</style>
+</head>
+<body>
+
+<div id="auth-screen" class="screen active">
+  <div class="auth-container">
+    <div class="auth-logo">
+      <div class="auth-logo-mark">📔</div>
+      <h1>Deny</h1>
+      <p>Jurnal Harian Pribadi</p>
+    </div>
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchAuthTab('login')">Masuk</button>
+        <button class="auth-tab" onclick="switchAuthTab('signup')">Daftar</button>
+      </div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" id="login-email" class="form-input" placeholder="nama@email.com" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Kata Sandi</label>
+          <input type="password" id="login-pass" class="form-input" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn-primary">Masuk →</button>
+        <div class="auth-error" id="login-error">Email atau kata sandi salah.</div>
+      </form>
+
+      <form id="signup-form" style="display:none">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" id="signup-name" class="form-input" placeholder="Username pilihanmu" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" id="signup-email" class="form-input" placeholder="nama@email.com" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Kata Sandi</label>
+          <input type="password" id="signup-pass" class="form-input" placeholder="Min. 6 karakter" required>
+        </div>
+        <button type="submit" class="btn-primary">Buat Akun →</button>
+        <div class="auth-error" id="signup-error"></div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="app-screen" class="screen">
+
+  <div class="topbar">
+    <div class="topbar-logo">Deny</div>
+    <div class="topbar-date">
+      <strong id="topbar-date-str"></strong>
+      <span id="topbar-day-str"></span>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" onclick="openSpreadsheet()" title="Lihat Spreadsheet">📊</button>
+      <button class="icon-btn" onclick="logout()" title="Keluar">⏻</button>
+    </div>
+  </div>
+
+  <div id="page-home" class="page active">
+    <div class="greeting-section">
+      <div class="greeting-text">Halo, <span id="greeting-name">Pengguna</span> ✦</div>
+      <div class="greeting-sub" id="greeting-sub"></div>
+    </div>
+
+    <div class="quote-card">
+      <div class="quote-text" id="daily-quote">Setiap hari adalah halaman baru yang menunggu untuk ditulis.</div>
+      <div class="quote-author">— Deny Journal</div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-icon">📝</div>
+        <div class="stat-value" id="stat-total">0</div>
+        <div class="stat-label">Total Jurnal</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🔥</div>
+        <div class="stat-value" id="stat-streak">0</div>
+        <div class="stat-label">Hari Berturut</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">💪</div>
+        <div class="stat-value" id="stat-exercise">0</div>
+        <div class="stat-label">Sesi Latihan</div>
+      </div>
+    </div>
+
+    <!-- ─── JADWAL OLAHRAGA MINGGUAN BAR ─── -->
+    <div class="section-title">Jadwal Olahraga Harian</div>
+    <div class="schedule-container" id="workout-schedule-bar">
+      <div class="schedule-card" id="sched-day-1">
+        <div class="schedule-day-title">Senin <span>🏃</span></div>
+        <div class="schedule-time-block">🌅 <strong>Pagi:</strong> Easy Run</div>
+        <div class="schedule-time-block">🌇 <strong>Sore:</strong> Chest, Tricep</div>
+      </div>
+      <div class="schedule-card" id="sched-day-2">
+        <div class="schedule-day-title">Selasa <span>⚡</span></div>
+        <div class="schedule-time-block">🌅 <strong>Pagi:</strong> Tempo Run</div>
+        <div class="schedule-time-block">🌇 <strong>Sore:</strong> Back, Bicep</div>
+      </div>
+      <div class="schedule-card" id="sched-day-3">
+        <div class="schedule-day-title">Rabu <span>🔥</span></div>
+        <div class="schedule-time-block">🌅 <strong>Pagi:</strong> Interval 400x5</div>
+        <div class="schedule-time-block">🌇 <strong>Sore:</strong> Leg</div>
+      </div>
+      <div class="schedule-card" id="sched-day-4">
+        <div class="schedule-day-title">Kamis <span>💪</span></div>
+        <div class="schedule-time-block">🌅 <strong>Pagi:</strong> Easy Run</div>
+        <div class="schedule-time-block">🌇 <strong>Sore:</strong> Shoulder, Core</div>
+      </div>
+      <div class="schedule-card" id="sched-day-5">
+        <div class="schedule-day-title">Jumat <span>🍃</span></div>
+        <div class="schedule-time-block">🌅 <strong>Pagi:</strong> Interval 400x5</div>
+        <div class="schedule-time-block">🌇 <strong>Sore:</strong> Rest</div>
+      </div>
+      <div class="schedule-card" id="sched-day-6">
+        <div class="schedule-day-title">Sabtu <span>☕</span></div>
+        <div class="schedule-time-block">😴 <strong>Full Day:</strong> Rest Day</div>
+      </div>
+      <div class="schedule-card" id="sched-day-0">
+        <div class="schedule-day-title">Minggu <span>🏆</span></div>
+        <div class="schedule-time-block">🌅 <strong>Pagi:</strong> Long Run</div>
+        <div class="schedule-time-block">🌇 <strong>Sore:</strong> Strength Training</div>
+      </div>
+    </div>
+
+    <div class="section-title">Jurnal Terbaru</div>
+    <div id="recent-entries-list"></div>
+  </div>
+
+  <div id="page-journal" class="page">
+    <div class="section-title">Semua Jurnal</div>
+    <div id="all-entries-list"></div>
+  </div>
+
+  <div id="page-calendar" class="page">
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
+      <div class="cal-month-title" id="cal-month-title"></div>
+      <button class="cal-nav-btn" onclick="changeMonth(1)">›</button>
+    </div>
+    <div class="calendar-grid" id="calendar-grid"></div>
+    <div class="section-title">Entri Bulan Ini</div>
+    <div id="cal-entries-list"></div>
+  </div>
+
+  <div id="page-stats" class="page">
+    <div class="section-title">Ringkasan Mood</div>
+    <div id="mood-stats"></div>
+
+    <div class="section-title" style="margin-top:24px">Target Mingguan</div>
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:24px">
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-label"><span>📝 Jurnal Harian</span><span id="prog-daily">0/7</span></div>
+        <div class="progress-bar-track"><div class="progress-bar-fill" id="prog-daily-bar" style="width:0%"></div></div>
+      </div>
+      <div class="progress-bar-wrap" style="margin-top:16px">
+        <div class="progress-bar-label"><span>💪 Sesi Olahraga</span><span id="prog-exercise">0/5</span></div>
+        <div class="progress-bar-track"><div class="progress-bar-fill teal" id="prog-exercise-bar" style="width:0%"></div></div>
+      </div>
+      <div class="progress-bar-wrap" style="margin-top:16px">
+        <div class="progress-bar-label"><span>😊 Mood Positif</span><span id="prog-mood">0%</span></div>
+        <div class="progress-bar-track"><div class="progress-bar-fill violet" id="prog-mood-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="section-title">Riwayat Olahraga</div>
+    <div id="exercise-history-list"></div>
+  </div>
+
+  <div id="page-profile" class="page">
+    <div class="profile-header">
+      <div class="avatar" id="profile-avatar">👤</div>
+      <div class="profile-name" id="profile-name-disp">Pengguna</div>
+      <div class="profile-email" id="profile-email-disp">email@contoh.com</div>
+    </div>
+
+    <div class="streak-badge">
+      <div class="streak-number" id="streak-big">0</div>
+      <div class="streak-label">🔥 Hari Berturut-turut</div>
+    </div>
+
+    <div class="section-title">Pengaturan</div>
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:4px 16px">
+      <div class="settings-item" onclick="openSpreadsheet()">
+        <div class="settings-left"><span class="settings-icon">📊</span><span class="settings-label">Export ke Spreadsheet</span></div>
+        <span class="settings-arrow">›</span>
+      </div>
+      <div class="settings-item" onclick="clearAllData()">
+        <div class="settings-left"><span class="settings-icon">🗑️</span><span class="settings-label">Hapus Semua Data</span></div>
+        <span class="settings-arrow">›</span>
+      </div>
+      <div class="settings-item" onclick="logout()">
+        <div class="settings-left"><span class="settings-icon">⏻</span><span class="settings-label">Keluar</span></div>
+        <span class="settings-arrow">›</span>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-item active" id="nav-home" onclick="showPage('home')">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Beranda</span>
+    </button>
+    <button class="nav-item" id="nav-journal" onclick="showPage('journal')">
+      <span class="nav-icon">📝</span>
+      <span class="nav-label">Jurnal</span>
+    </button>
+    <button class="nav-item" id="nav-calendar" onclick="showPage('calendar')">
+      <span class="nav-icon">📅</span>
+      <span class="nav-label">Kalender</span>
+    </button>
+    <button class="nav-item" id="nav-stats" onclick="showPage('stats')">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Statistik</span>
+    </button>
+    <button class="nav-item" id="nav-profile" onclick="showPage('profile')">
+      <span class="nav-icon">👤</span>
+      <span class="nav-label">Profil</span>
+    </button>
+  </nav>
+
+  <button class="fab" onclick="openAddModal()">＋</button>
+</div>
+
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title"><span id="modal-title-icon">✦</span> <span id="modal-title-text">Tulis Jurnal</span></div>
+
+    <div class="modal-tabs">
+      <button class="modal-tab active" onclick="switchEntryType('daily')">📝 Harian</button>
+      <button class="modal-tab" onclick="switchEntryType('exercise')">💪 Olahraga</button>
+      <button class="modal-tab" onclick="switchEntryType('mood')">😊 Mood</button>
+    </div>
+
+    <form id="entry-form">
+        <div id="daily-form">
+        <div class="form-group">
+            <label class="form-label">Judul</label>
+            <input type="text" id="entry-title" class="form-input" placeholder="Apa yang terjadi hari ini?">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Catatan</label>
+            <textarea class="textarea-field" id="entry-content" placeholder="Ceritakan harimu..." rows="5"></textarea>
+        </div>
+        <label class="form-row-label">Mood Hari Ini</label>
+        <div class="mood-selector" id="mood-selector">
+            <button type="button" class="mood-btn" data-mood="😄" onclick="selectMood(this)">😄 <span>Bahagia</span></button>
+            <button type="button" class="mood-btn" data-mood="😌" onclick="selectMood(this)">😌 <span>Tenang</span></button>
+            <button type="button" class="mood-btn" data-mood="😔" onclick="selectMood(this)">😔 <span>Sedih</span></button>
+            <button type="button" class="mood-btn" data-mood="😤" onclick="selectMood(this)">😤 <span>Frustrasi</span></button>
+            <button type="button" class="mood-btn" data-mood="🤩" onclick="selectMood(this)">🤩 <span>Bersemangat</span></button>
+            <button type="button" class="mood-btn" data-mood="😴" onclick="selectMood(this)">😴 <span>Lelah</span></button>
+        </div>
+        <label class="form-row-label">Tag</label>
+        <div class="tag-row">
+            <button type="button" class="tag" onclick="toggleTag(this)">💼 Kerja</button>
+            <button type="button" class="tag" onclick="toggleTag(this)">👨‍👩‍👧 Keluarga</button>
+            <button type="button" class="tag" onclick="toggleTag(this)">🌿 Alam</button>
+            <button type="button" class="tag" onclick="toggleTag(this)">📚 Belajar</button>
+            <button type="button" class="tag" onclick="toggleTag(this)">✈️ Perjalanan</button>
+            <button type="button" class="tag" onclick="toggleTag(this)">💭 Refleksi</button>
+        </div>
+        </div>
+
+        <div id="exercise-form-block" style="display:none">
+        <div class="form-group">
+            <label class="form-label">Jenis Olahraga</label>
+            <select class="select-field" id="exercise-type">
+            <option value="Lari">🏃 Lari</option>
+            <option value="Gym">💪 Gym / Angkat Beban</option>
+            <option value="Renang">🏊 Renang</option>
+            <option value="Sepeda">🚴 Sepeda</option>
+            <option value="Yoga">🧘 Yoga</option>
+            <option value="Badminton">🏸 Badminton</option>
+            <option value="Basket">🏀 Basket</option>
+            <option value="Sepakbola">⚽ Sepakbola</option>
+            <option value="Lainnya">🏋️ Lainnya</option>
+            </select>
+        </div>
+        <div class="input-row">
+            <div class="form-group">
+            <label class="form-label">Durasi (menit)</label>
+            <input type="number" id="exercise-duration" class="form-input" placeholder="30" min="1">
+            </div>
+            <div class="form-group">
+            <label class="form-label">Kalori (kkal)</label>
+            <input type="number" id="exercise-calories" class="form-input" placeholder="200" min="0">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Jarak (km, opsional)</label>
+            <input type="number" id="exercise-distance" class="form-input" placeholder="5.0" step="0.1" min="0">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Catatan</label>
+            <textarea class="textarea-field" id="exercise-notes" placeholder="Bagaimana sesi latihanmu?" rows="3"></textarea>
+        </div>
+        <label class="form-row-label">Intensitas</label>
+        <div class="tag-row" id="intensity-tags">
+            <button type="button" class="tag" onclick="toggleExclusiveTag(this, 'intensity-tags')">🟢 Ringan</button>
+            <button type="button" class="tag" onclick="toggleExclusiveTag(this, 'intensity-tags')">🟡 Sedang</button>
+            <button type="button" class="tag" onclick="toggleExclusiveTag(this, 'intensity-tags')">🔴 Berat</button>
+        </div>
+        </div>
+
+        <div id="mood-form-block" style="display:none">
+        <div class="form-group">
+            <label class="form-label">Perasaan Utama</label>
+            <div class="mood-selector" id="mood-selector-2">
+            <button type="button" class="mood-btn" data-mood="😄" onclick="selectMood2(this)">😄 <span>Bahagia</span></button>
+            <button type="button" class="mood-btn" data-mood="😌" onclick="selectMood2(this)">😌 <span>Tenang</span></button>
+            <button type="button" class="mood-btn" data-mood="😔" onclick="selectMood2(this)">😔 <span>Sedih</span></button>
+            <button type="button" class="mood-btn" data-mood="😤" onclick="selectMood2(this)">😤 <span>Frustrasi</span></button>
+            <button type="button" class="mood-btn" data-mood="🤩" onclick="selectMood2(this)">🤩 <span>Bersemangat</span></button>
+            <button type="button" class="mood-btn" data-mood="😰" onclick="selectMood2(this)">😰 <span>Cemas</span></button>
+            <button type="button" class="mood-btn" data-mood="🥰" onclick="selectMood2(this)">🥰 <span>Bersyukur</span></button>
+            <button type="button" class="mood-btn" data-mood="😴" onclick="selectMood2(this)">😴 <span>Lelah</span></button>
+            </div>
+        </div>
+        <label class="form-row-label">Energi (1-10)</label>
+        <input type="range" id="energy-level" min="1" max="10" value="5" style="width:100%;accent-color:var(--gold);margin-bottom:8px">
+        <div style="text-align:center;font-size:24px" id="energy-display">⚡5</div>
+        <div class="form-group" style="margin-top:16px">
+            <label class="form-label">Apa yang kamu syukuri?</label>
+            <textarea class="textarea-field" id="gratitude-text" placeholder="Tulis 3 hal yang kamu syukuri hari ini..." rows="4"></textarea>
+        </div>
+        </div>
+
+        <div style="display:flex;margin-top:24px;gap:8px">
+        <button type="button" class="btn-secondary" onclick="closeModal()">Batal</button>
+        <button type="submit" class="btn-primary" style="margin-top:0">Simpan ✓</button>
+        </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="spreadsheet-modal">
+  <div class="modal" style="max-height:95vh">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📊 Data Spreadsheet</div>
+    <div style="margin-bottom:16px">
+      <button class="btn-export" onclick="exportCSV('all')">⬇ Export Semua (CSV)</button>
+      <button class="btn-export" onclick="exportCSV('exercise')" style="background:rgba(91,184,168,0.1);border-color:rgba(91,184,168,0.2);color:var(--accent-teal)">⬇ Export Olahraga</button>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="spreadsheet-table" id="spreadsheet-table">
+        <thead>
+          <tr>
+            <th>Tanggal</th>
+            <th>Tipe</th>
+            <th>Judul</th>
+            <th>Mood</th>
+            <th>Tag</th>
+            <th>Catatan</th>
+          </tr>
+        </thead>
+        <tbody id="spreadsheet-tbody"></tbody>
+      </table>
+    </div>
+    <button class="btn-secondary" onclick="document.getElementById('spreadsheet-modal').classList.remove('open')" style="width:100%">Tutup</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, query, where, orderBy, onSnapshot, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+
+// Konfigurasi Firebase Anda
+const firebaseConfig = {
+    apiKey: "AIzaSyD0fruoPBsGqXV74dVqex6KhN2b2oN0bTw",
+    authDomain: "websitekelas1.firebaseapp.com",
+    projectId: "websitekelas1",
+    storageBucket: "websitekelas1.firebasestorage.app",
+    messagingSenderId: "914193160974",
+    appId: "1:914193160974:web:668aa41b1798723219d55f",
+    measurementId: "G-231NV2FELN"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// Global Variables
+window.currentUser = null;
+window.currentEntryType = 'daily';
+window.selectedMood = '';
+window.selectedMood2 = '';
+window.selectedTags = [];
+window.editingId = null;
+window.calendarDate = new Date();
+window.appEntries = []; // Menyimpan state data secara lokal untuk di-render cepat
+let unsubscribeEntries = null;
+
+const QUOTES = [
+  "Setiap hari adalah halaman baru yang menunggu untuk ditulis.",
+  "Menulis adalah cara terbaik untuk memahami dirimu sendiri.",
+  "Hidup yang tidak direfleksikan tidak layak untuk dijalani. — Socrates",
+  "Jurnal adalah teman yang paling jujur.",
+  "Dalam ketenangan, kamu akan menemukan jawabannya.",
+  "Setiap momen berlalu, tuliskan agar abadi.",
+  "Keberanian dimulai dari kejujuran pada diri sendiri.",
+  "Hal-hal kecil hari ini adalah kenangan besar esok hari.",
+];
+
+// ══════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════
+window.switchAuthTab = function(tab) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('signup-form').style.display = tab === 'signup' ? 'block' : 'none';
+}
+
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value;
+    const pass = document.getElementById('login-pass').value;
+    const err = document.getElementById('login-error');
+    try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        err.style.display = 'none';
+    } catch (error) {
+        showError(err, "Login gagal: Email atau sandi salah.");
+    }
+});
+
+document.getElementById('signup-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('signup-name').value;
+    const email = document.getElementById('signup-email').value;
+    const pass = document.getElementById('signup-pass').value;
+    const err = document.getElementById('signup-error');
+    if (pass.length < 6) return showError(err, 'Kata sandi minimal 6 karakter.');
+    
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+        // Simpan username (Display Name) ke profile Firebase
+        await updateProfile(userCredential.user, { displayName: name });
+        err.style.display = 'none';
+        showToast("Akun berhasil dibuat!");
+    } catch (error) {
+        showError(err, "Gagal daftar: " + error.message);
+    }
+});
+
+window.logout = function() { signOut(auth).catch(err => alert(err.message)); }
+
+function showError(el, msg) { el.textContent = msg; el.style.display = 'block'; }
+
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        window.currentUser = user;
+        document.getElementById('auth-screen').classList.remove('active');
+        document.getElementById('app-screen').classList.add('active');
+        initApp();
+        fetchData();
+    } else {
+        window.currentUser = null;
+        window.appEntries = [];
+        document.getElementById('auth-screen').classList.add('active');
+        document.getElementById('app-screen').classList.remove('active');
+        if (unsubscribeEntries) unsubscribeEntries();
+    }
+});
+
+// ══════════════════════════════════════════
+//  APP INIT
+// ══════════════════════════════════════════
+function initApp() {
+  updateTopbar();
+  updateGreeting();
+  updateProfilePage();
+  highlightTodayWorkout();
+}
+
+function updateTopbar() {
+  const now = new Date();
+  const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  document.getElementById('topbar-date-str').textContent = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+  document.getElementById('topbar-day-str').textContent = days[now.getDay()];
+}
+
+function updateGreeting() {
+  const h = new Date().getHours();
+  let greeting = h < 12 ? 'Selamat Pagi' : h < 15 ? 'Selamat Siang' : h < 18 ? 'Selamat Sore' : 'Selamat Malam';
+  const name = window.currentUser.displayName || window.currentUser.email.split('@')[0];
+  document.getElementById('greeting-name').textContent = name;
+  document.getElementById('greeting-sub').textContent = `${greeting}! Semangat menulis hari ini.`;
+  document.getElementById('daily-quote').textContent = QUOTES[new Date().getDate() % QUOTES.length];
+}
+
+window.highlightTodayWorkout = function() {
+  const currentDay = new Date().getDay(); // 0 = Minggu, 1 = Senin, ... 6 = Sabtu
+  document.querySelectorAll('.schedule-card').forEach(card => card.classList.remove('today'));
+  const todayCard = document.getElementById(`sched-day-${currentDay}`);
+  if (todayCard) {
+    todayCard.classList.add('today');
+    setTimeout(() => {
+      todayCard.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }, 400);
+  }
+}
+
+// ══════════════════════════════════════════
+//  DATA FETCH & SYNC
+// ══════════════════════════════════════════
+function fetchData() {
+    const q = query(collection(db, "Deny_entries"), where("userId", "==", window.currentUser.uid), orderBy("timestamp", "asc"));
+    
+    unsubscribeEntries = onSnapshot(q, (snapshot) => {
+        window.appEntries = [];
+        snapshot.forEach((doc) => {
+            window.appEntries.push({ id: doc.id, ...doc.data() });
+        });
+        // Render semua UI yang bergantung pada data
+        updateStats();
+        renderRecentEntries();
+        renderAllEntries();
+        renderCalendar();
+        renderStatsPage();
+    });
+}
+
+function calculateStreak(entries) {
+  const dates = [...new Set(entries.map(e => e.date))].sort().reverse();
+  if (!dates.length) return 0;
+  let streak = 0, check = new Date();
+  check.setHours(0,0,0,0);
+  for (let d of dates) {
+    const ed = new Date(d); ed.setHours(0,0,0,0);
+    const diff = (check - ed) / 86400000;
+    if (diff <= 1) { streak++; check = ed; }
+    else break;
+  }
+  return streak;
+}
+
+function updateStats() {
+  const exercises = window.appEntries.filter(e => e.type === 'exercise');
+  document.getElementById('stat-total').textContent = window.appEntries.length;
+  document.getElementById('stat-exercise').textContent = exercises.length;
+  document.getElementById('stat-streak').textContent = calculateStreak(window.appEntries);
+  document.getElementById('streak-big').textContent = calculateStreak(window.appEntries);
+}
+
+// ══════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════
+window.showPage = function(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  if(name === 'home') setTimeout(window.highlightTodayWorkout, 100);
+}
+
+// ══════════════════════════════════════════
+//  ENTRY RENDERING
+// ══════════════════════════════════════════
+function renderEntryCard(entry, container) {
+  const el = document.createElement('div');
+  el.className = 'entry-card' + (entry.type === 'exercise' ? ' exercise-type' : '');
+  const badge = entry.type === 'exercise' ? '<span class="entry-badge badge-exercise">💪 Olahraga</span>'
+              : entry.type === 'mood' ? '<span class="entry-badge badge-mood">😊 Mood</span>'
+              : '<span class="entry-badge badge-daily">📝 Harian</span>';
+  const preview = entry.type === 'exercise'
+    ? `${entry.exerciseType} • ${entry.duration} menit • ${entry.calories} kkal`
+    : entry.type === 'mood'
+    ? `Mood: ${entry.mood2 || '—'} | Energi: ⚡${entry.energy || 5} | ${entry.gratitude || ''}`
+    : entry.content || '';
+  el.innerHTML = `
+    <div class="entry-meta">
+      <span class="entry-date">${formatDate(entry.date)}</span>
+      ${badge}
+    </div>
+    <div class="entry-title">${entry.title || entry.exerciseType || 'Catatan Mood'}</div>
+    <div class="entry-preview">${preview}</div>
+    <div class="entry-footer">
+      <span class="mood-emoji">${entry.mood || entry.mood2 || ''}</span>
+      <div class="entry-actions">
+        <button class="action-btn-sm edit" onclick="editEntry('${entry.id}')">✏ Edit</button>
+        <button class="action-btn-sm" onclick="deleteEntry('${entry.id}')">🗑 Hapus</button>
+      </div>
+    </div>`;
+  container.appendChild(el);
+}
+
+function renderRecentEntries() {
+  const list = document.getElementById('recent-entries-list');
+  list.innerHTML = '';
+  const entries = [...window.appEntries].reverse().slice(0, 5);
+  if (!entries.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📔</div><h3>Belum ada jurnal</h3><p>Tekan + untuk mulai menulis jurnal pertamamu.</p></div>`;
+    return;
+  }
+  entries.forEach(e => renderEntryCard(e, list));
+}
+
+function renderAllEntries() {
+  const list = document.getElementById('all-entries-list');
+  list.innerHTML = '';
+  const entries = [...window.appEntries].reverse();
+  if (!entries.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📔</div><h3>Belum ada jurnal</h3><p>Mulai tuliskan harimu!</p></div>`;
+    return;
+  }
+  entries.forEach(e => renderEntryCard(e, list));
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr);
+  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+// ══════════════════════════════════════════
+//  MODAL LOGIC
+// ══════════════════════════════════════════
+window.openAddModal = function() {
+  window.editingId = null;
+  window.selectedMood = ''; window.selectedMood2 = ''; window.selectedTags = [];
+  document.getElementById('entry-form').reset();
+  document.getElementById('energy-display').textContent = '⚡5';
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.tag').forEach(t => t.classList.remove('selected'));
+  document.getElementById('modal-title-text').textContent = 'Tulis Jurnal';
+  window.switchEntryType('daily');
+  document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.modal-tab')[0].classList.add('active');
+  document.getElementById('add-modal').classList.add('open');
+}
+
+window.closeModal = function() {
+  document.getElementById('add-modal').classList.remove('open');
+  window.editingId = null;
+}
+
+document.getElementById('add-modal').addEventListener('click', function(e) {
+  if (e.target === this) window.closeModal();
+});
+
+window.switchEntryType = function(type) {
+  window.currentEntryType = type;
+  document.getElementById('daily-form').style.display = type === 'daily' ? 'block' : 'none';
+  document.getElementById('exercise-form-block').style.display = type === 'exercise' ? 'block' : 'none';
+  document.getElementById('mood-form-block').style.display = type === 'mood' ? 'block' : 'none';
+  const icons = { daily: '✦', exercise: '💪', mood: '😊' };
+  const titles = { daily: 'Tulis Jurnal', exercise: 'Catat Olahraga', mood: 'Catat Mood' };
+  document.getElementById('modal-title-icon').textContent = icons[type];
+  document.getElementById('modal-title-text').textContent = titles[type];
+  document.querySelectorAll('.modal-tab').forEach((t,i) => {
+    t.classList.toggle('active', ['daily','exercise','mood'][i] === type);
+  });
+}
+
+window.selectMood = function(btn) {
+  document.querySelectorAll('#mood-selector .mood-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  window.selectedMood = btn.dataset.mood;
+}
+
+window.selectMood2 = function(btn) {
+  document.querySelectorAll('#mood-selector-2 .mood-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  window.selectedMood2 = btn.dataset.mood;
+}
+
+window.toggleTag = function(btn) { btn.classList.toggle('selected'); }
+
+window.toggleExclusiveTag = function(btn, groupId) {
+  document.querySelectorAll(`#${groupId} .tag`).forEach(t => t.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+document.getElementById('energy-level').addEventListener('input', function() {
+  document.getElementById('energy-display').textContent = '⚡' + this.value;
+});
+
+document.getElementById('entry-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  let entryData = { userId: window.currentUser.uid };
+  const now = new Date();
+  const dateStr = now.toISOString().split('T')[0];
+
+  if (window.currentEntryType === 'daily') {
+    const title = document.getElementById('entry-title').value.trim();
+    const content = document.getElementById('entry-content').value.trim();
+    if (!title && !content) { showToast('Isi judul atau catatan!'); return; }
+    const tags = [...document.querySelectorAll('#daily-form .tag.selected')].map(t => t.textContent.trim());
+    entryData = { ...entryData, type: 'daily', title, content, mood: window.selectedMood, tags, date: dateStr, timestamp: now };
+  } else if (window.currentEntryType === 'exercise') {
+    const dur = document.getElementById('exercise-duration').value;
+    if (!dur) { showToast('Isi durasi latihan!'); return; }
+    const intensity = document.querySelector('#intensity-tags .tag.selected')?.textContent.trim() || '🟡 Sedang';
+    entryData = {
+      ...entryData,
+      type: 'exercise',
+      exerciseType: document.getElementById('exercise-type').value,
+      duration: parseInt(dur),
+      calories: parseInt(document.getElementById('exercise-calories').value) || 0,
+      distance: parseFloat(document.getElementById('exercise-distance').value) || 0,
+      notes: document.getElementById('exercise-notes').value.trim(),
+      intensity,
+      date: dateStr,
+      timestamp: now
+    };
+  } else {
+    if (!window.selectedMood2) { showToast('Pilih mood kamu!'); return; }
+    entryData = {
+      ...entryData,
+      type: 'mood',
+      mood2: window.selectedMood2,
+      energy: document.getElementById('energy-level').value,
+      gratitude: document.getElementById('gratitude-text').value.trim(),
+      date: dateStr,
+      timestamp: now
+    };
+  }
+
+  try {
+      if (window.editingId) {
+          await updateDoc(doc(db, "Deny_entries", window.editingId), entryData);
+          showToast('Jurnal diperbarui! ✓');
+      } else {
+          await addDoc(collection(db, "Deny_entries"), entryData);
+          showToast('Jurnal tersimpan! ✓');
+      }
+      window.closeModal();
+  } catch(err) {
+      alert("Gagal menyimpan ke cloud: " + err.message);
+  }
+});
+
+window.deleteEntry = async function(id) {
+  if (!confirm('Hapus jurnal ini secara permanen dari cloud?')) return;
+  try {
+      await deleteDoc(doc(db, "Deny_entries", id));
+      showToast('Jurnal dihapus.');
+  } catch (err) {
+      alert("Gagal menghapus: " + err.message);
+  }
+}
+
+window.editEntry = function(id) {
+  const entry = window.appEntries.find(e => e.id === id);
+  if (!entry) return;
+  window.editingId = id;
+  window.openAddModal();
+
+  if (entry.type === 'daily') {
+    window.switchEntryType('daily');
+    document.querySelectorAll('.modal-tab')[0].classList.add('active');
+    document.getElementById('entry-title').value = entry.title || '';
+    document.getElementById('entry-content').value = entry.content || '';
+    if (entry.mood) {
+      window.selectedMood = entry.mood;
+      document.querySelectorAll('#mood-selector .mood-btn').forEach(b => {
+        if (b.dataset.mood === entry.mood) b.classList.add('selected');
+      });
+    }
+    if(entry.tags) {
+       document.querySelectorAll('#daily-form .tag').forEach(t => {
+           if(entry.tags.includes(t.textContent.trim())) t.classList.add('selected');
+       });
+    }
+  } else if (entry.type === 'exercise') {
+    window.switchEntryType('exercise');
+    document.getElementById('exercise-type').value = entry.exerciseType;
+    document.getElementById('exercise-duration').value = entry.duration;
+    document.getElementById('exercise-calories').value = entry.calories;
+    document.getElementById('exercise-distance').value = entry.distance;
+    document.getElementById('exercise-notes').value = entry.notes;
+  } else {
+    window.switchEntryType('mood');
+    window.selectedMood2 = entry.mood2;
+    document.querySelectorAll('#mood-selector-2 .mood-btn').forEach(b => {
+      if (b.dataset.mood === entry.mood2) b.classList.add('selected');
+    });
+    document.getElementById('energy-level').value = entry.energy;
+    document.getElementById('energy-display').textContent = '⚡' + entry.energy;
+    document.getElementById('gratitude-text').value = entry.gratitude || '';
+  }
+  document.getElementById('modal-title-text').textContent = 'Edit Jurnal';
+}
+
+// ══════════════════════════════════════════
+//  CALENDAR
+// ══════════════════════════════════════════
+function renderCalendar() {
+  const y = window.calendarDate.getFullYear(), m = window.calendarDate.getMonth();
+  const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  document.getElementById('cal-month-title').textContent = `${months[m]} ${y}`;
+
+  const grid = document.getElementById('calendar-grid');
+  grid.innerHTML = '';
+  ['Min','Sen','Sel','Rab','Kam','Jum','Sab'].forEach(d => {
+    const h = document.createElement('div');
+    h.className = 'cal-header'; h.textContent = d;
+    grid.appendChild(h);
+  });
+
+  const firstDay = new Date(y, m, 1).getDay();
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const today = new Date();
+  const entryDates = {};
+  window.appEntries.forEach(e => {
+    const ed = e.date;
+    if (!entryDates[ed]) entryDates[ed] = [];
+    entryDates[ed].push(e.type);
+  });
+
+  for (let i = 0; i < firstDay; i++) {
+    const empty = document.createElement('div');
+    empty.className = 'cal-day empty';
+    grid.appendChild(empty);
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const day = document.createElement('div');
+    day.className = 'cal-day';
+    day.textContent = d;
+    if (d === today.getDate() && m === today.getMonth() && y === today.getFullYear()) day.classList.add('today');
+    if (entryDates[dateStr]) {
+      day.classList.add('has-entry');
+      if (entryDates[dateStr].includes('exercise')) day.classList.add('has-exercise');
+    }
+    day.onclick = () => filterCalEntries(dateStr);
+    grid.appendChild(day);
+  }
+
+  renderCalMonthEntries();
+}
+
+window.changeMonth = function(dir) {
+  window.calendarDate.setMonth(window.calendarDate.getMonth() + dir);
+  renderCalendar();
+}
+
+function filterCalEntries(dateStr) {
+  const list = document.getElementById('cal-entries-list');
+  list.innerHTML = '';
+  const entries = window.appEntries.filter(e => e.date === dateStr);
+  if (!entries.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📅</div><h3>Tidak ada entri</h3><p>Belum ada jurnal pada tanggal ini.</p></div>`;
+    return;
+  }
+  entries.forEach(e => renderEntryCard(e, list));
+}
+
+function renderCalMonthEntries() {
+  const y = window.calendarDate.getFullYear(), m = window.calendarDate.getMonth();
+  const list = document.getElementById('cal-entries-list');
+  list.innerHTML = '';
+  const entries = window.appEntries.filter(e => {
+    const d = new Date(e.date);
+    return d.getFullYear() === y && d.getMonth() === m;
+  }).reverse();
+  if (!entries.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📅</div><h3>Belum ada jurnal bulan ini</h3></div>`;
+    return;
+  }
+  entries.forEach(e => renderEntryCard(e, list));
+}
+
+// ══════════════════════════════════════════
+//  STATS PAGE
+// ══════════════════════════════════════════
+function renderStatsPage() {
+  const now = new Date();
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay());
+  weekStart.setHours(0,0,0,0);
+
+  const weekEntries = window.appEntries.filter(e => new Date(e.date) >= weekStart);
+  const weekDaily = weekEntries.filter(e => e.type === 'daily').length;
+  const weekExercise = weekEntries.filter(e => e.type === 'exercise').length;
+  const moodPositive = window.appEntries.filter(e => ['😄','🤩','🥰','😌'].includes(e.mood || e.mood2)).length;
+  const moodTotal = window.appEntries.filter(e => e.mood || e.mood2).length;
+  const moodPct = moodTotal ? Math.round((moodPositive/moodTotal)*100) : 0;
+
+  document.getElementById('prog-daily').textContent = `${weekDaily}/7`;
+  document.getElementById('prog-daily-bar').style.width = Math.min(weekDaily/7*100,100)+'%';
+  document.getElementById('prog-exercise').textContent = `${weekExercise}/5`;
+  document.getElementById('prog-exercise-bar').style.width = Math.min(weekExercise/5*100,100)+'%';
+  document.getElementById('prog-mood').textContent = `${moodPct}%`;
+  document.getElementById('prog-mood-bar').style.width = moodPct+'%';
+
+  const moodCount = {};
+  window.appEntries.forEach(e => {
+    const m = e.mood || e.mood2;
+    if (m) moodCount[m] = (moodCount[m]||0)+1;
+  });
+  const moodEl = document.getElementById('mood-stats');
+  moodEl.innerHTML = '';
+  if (!Object.keys(moodCount).length) {
+    moodEl.innerHTML = '<div class="empty-state"><div class="empty-state-icon">😊</div><h3>Belum ada data mood</h3></div>';
+  } else {
+    const total = Object.values(moodCount).reduce((a,b)=>a+b,0);
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px';
+    Object.entries(moodCount).sort((a,b)=>b[1]-a[1]).forEach(([mood, count]) => {
+      const pct = Math.round(count/total*100);
+      wrap.innerHTML += `
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-label"><span>${mood} ${count} kali</span><span>${pct}%</span></div>
+          <div class="progress-bar-track"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+        </div>`;
+    });
+    moodEl.appendChild(wrap);
+  }
+
+  const exList = document.getElementById('exercise-history-list');
+  exList.innerHTML = '';
+  const exercises = window.appEntries.filter(e => e.type === 'exercise').reverse();
+  if (!exercises.length) {
+    exList.innerHTML = '<div class="empty-state"><div class="empty-state-icon">💪</div><h3>Belum ada riwayat olahraga</h3></div>';
+    return;
+  }
+  exercises.forEach(e => {
+    const icons = { Lari:'🏃', Gym:'💪', Renang:'🏊', Sepeda:'🚴', Yoga:'🧘', Badminton:'🏸', Basket:'🏀', Sepakbola:'⚽', Lainnya:'🏋️' };
+    const el = document.createElement('div');
+    el.className = 'exercise-summary-card';
+    el.innerHTML = `
+      <div class="exercise-icon-big">${icons[e.exerciseType]||'🏋️'}</div>
+      <div class="exercise-info">
+        <div class="exercise-name">${e.exerciseType}</div>
+        <div class="exercise-detail">${formatDate(e.date)} • ${e.duration} menit • ${e.calories} kkal${e.distance ? ' • '+e.distance+'km' : ''}</div>
+        <div class="exercise-detail" style="margin-top:3px">${e.intensity||''} ${e.notes ? '• '+e.notes : ''}</div>
+      </div>`;
+    exList.appendChild(el);
+  });
+}
+
+// ══════════════════════════════════════════
+//  PROFILE
+// ══════════════════════════════════════════
+function updateProfilePage() {
+  if (!window.currentUser) return;
+  const name = window.currentUser.displayName || window.currentUser.email.split('@')[0];
+  document.getElementById('profile-name-disp').textContent = name;
+  document.getElementById('profile-email-disp').textContent = window.currentUser.email;
+  document.getElementById('profile-avatar').textContent = name.charAt(0).toUpperCase();
+}
+
+window.clearAllData = async function() {
+  if (!confirm('Yakin ingin menghapus semua data Anda dari cloud? Tindakan ini tidak dapat dibatalkan.')) return;
+  try {
+      // Hapus data satu per satu di Firestore (Firestore tidak mendukung batch delete koleksi dari client)
+      const q = query(collection(db, "Deny_entries"), where("userId", "==", window.currentUser.uid));
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach((docSnap) => {
+          deleteDoc(doc(db, "Deny_entries", docSnap.id));
+      });
+      showToast('Seluruh data berhasil dihapus.');
+  } catch (err) {
+      alert("Gagal menghapus data: " + err.message);
+  }
+}
+
+// ══════════════════════════════════════════
+//  SPREADSHEET
+// ══════════════════════════════════════════
+window.openSpreadsheet = function() {
+  const tbody = document.getElementById('spreadsheet-tbody');
+  tbody.innerHTML = '';
+  [...window.appEntries].reverse().forEach(e => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${formatDate(e.date)}</td>
+      <td>${e.type === 'exercise' ? '💪 Olahraga' : e.type === 'mood' ? '😊 Mood' : '📝 Harian'}</td>
+      <td title="${e.title||e.exerciseType||'Mood'}">${e.title||e.exerciseType||'Catatan Mood'}</td>
+      <td>${e.mood||e.mood2||'—'}</td>
+      <td>${(e.tags||[]).join(', ')||'—'}</td>
+      <td title="${e.content||e.notes||e.gratitude||''}">${(e.content||e.notes||e.gratitude||'').substring(0,40)}${(e.content||e.notes||e.gratitude||'').length>40?'…':''}</td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('spreadsheet-modal').classList.add('open');
+}
+
+window.exportCSV = function(type) {
+  let entries = [...window.appEntries];
+  if (type === 'exercise') entries = entries.filter(e => e.type === 'exercise');
+
+  let csv = 'Tanggal,Tipe,Judul/Nama,Mood,Durasi,Kalori,Jarak,Intensitas,Tag,Catatan\n';
+  entries.forEach(e => {
+    const row = [
+      e.date,
+      e.type,
+      (e.title||e.exerciseType||'Catatan Mood').replace(/,/g,' '),
+      e.mood||e.mood2||'',
+      e.duration||'',
+      e.calories||'',
+      e.distance||'',
+      e.intensity||'',
+      (e.tags||[]).join('; '),
+      (e.content||e.notes||e.gratitude||'').replace(/[\n,]/g,' ')
+    ];
+    csv += row.map(v => `"${v}"`).join(',') + '\n';
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Deny_${type}_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('File CSV berhasil diunduh! ✓');
+}
+
+// ══════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════
+window.showToast = function(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>
